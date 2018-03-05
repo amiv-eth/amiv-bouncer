@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "webpack-dev-server --hot --inline",
+    "server": "webpack -p --config webpack.config.prod.js; mkdir -p public/; cp -rf index.html dist/ public/; http-server -g",
     "build": "webpack -p --config webpack.config.prod.js",
     "lint": "eslint src/**",
     "lint-fix": "eslint --fix src/**"
@@ -15,6 +16,7 @@
   },
   "author": "Alexander Dietmüller",
   "dependencies": {
+    "http-server": "^0.11.1",
     "mithril": "^1.1.6",
     "papaparse": "^4.3.7",
     "polythene-core-css": "^1.0.0",

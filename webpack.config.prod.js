@@ -4,6 +4,7 @@ const CompressionPlugin = require('compression-webpack-plugin');
 // Start with dev config
 const config = require('./webpack.config.js');
 
+
 // Remove development server and code map
 config.devServer = undefined;
 config.devtool = '';
@@ -18,6 +19,9 @@ config.plugins = [
     test: /\.js$|\.css$|\.html$/,
     threshold: 10240,
     minRatio: 0.8,
+  }),
+  new webpack.EnvironmentPlugin({
+    API_URL: 'api.amiv.ethz.ch',
   }),
 ];
 

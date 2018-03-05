@@ -3,7 +3,8 @@
 import m from 'mithril';
 import { Button, TextField } from 'polythene-mithril';
 
-const apiUrl = 'https://amiv-api-gv-1.ethz.ch';
+// URL be set from environment by webpack during build
+const apiUrl = process.env.API_URL;
 
 const tokenStorage = {
   token: window.localStorage.getItem('bouncer-token'),

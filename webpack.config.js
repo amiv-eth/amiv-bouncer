@@ -1,4 +1,6 @@
-const publicPath = '/dist';
+const webpack = require('webpack');
+
+const publicPath = '/dist/';
 
 const config = {
   context: `${__dirname}/src`, // `__dirname` is root of project
@@ -36,7 +38,7 @@ const config = {
           {
             loader: 'file-loader',
             options: {
-              useRelativePath: true,
+              // useRelativePath: true,
               publicPath,
             },
           },
