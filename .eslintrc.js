@@ -6,6 +6,7 @@ module.exports = {
   },
   'rules': {
     // Adjust the rules to your needs.
-    // Complete List: https://eslint.org/docs/rules/  
+    // Complete List: https://eslint.org/docs/rules/
+    'no-underscore-dangle': 0,
   },
 };

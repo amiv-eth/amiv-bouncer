@@ -1,0 +1,160 @@
+/* https://css-tricks.com/snippets/css/complete-guide-grid */
+/* https://css-tricks.com/snippets/css/a-guide-to-flexbox */
+
+body {
+  margin: 0;
+}
+
+.hide {
+    display: none;
+}
+
+.container {
+  /* Remove any browser-default margins. */
+  margin: 0;
+
+  /* Height and width fallback for older browsers. */
+  min-height: 100%;
+  width: 100%;
+
+  /* Set the height to match that of the viewport. */
+  min-height: 100vh;
+
+  /* Set the width to match that of the viewport. */
+  width: 100vw;
+
+  /* Color */
+  background-color: GhostWhite;
+
+  /* Grid power! */
+  display: grid;
+  grid-template-columns: [container-start] 5% [content-start] auto
+                         [content-end] 5% [container-end];
+  grid-template-rows: [header-start] auto [header-end file-start] auto
+                      [file-end content-start] 1fr [content-end];
+
+  grid-column-gap: 0px;
+  grid-row-gap: 0px;
+}
+
+.login-container {
+  grid-column: content-start / content-end;
+  grid-row: header-start / content-end;
+}
+
+.header {
+  grid-column: content-start / content-end;
+  grid-row: header-start / header-end;
+
+  /* Flex */
+  display: flex;
+  padding: 0.5em;
+
+  height: 8em;
+  color: white;
+}
+
+.header-background {
+  grid-column: container-start / container-end;
+  grid-row: header-start / header-end;
+  background-color: rgb(32, 45, 84);
+}
+
+.header-logo {
+  flex-grow: 1;
+  flex-basis: 0;
+
+  text-align: left;
+}
+
+.header-logo-image {
+  height: 100%;
+  max-width: 100%;
+}
+
+
+.header-api {
+  flex-grow: 1.5;
+  flex-basis: 0;
+
+  margin-left: 2em;
+  margin-right: 2em;
+
+  align-self: center;
+  text-align: left;
+}
+
+.header-api-bar-container {
+  width: 100%;
+  padding: 0em 0.5em;
+  border-left: 1px solid rgb(232, 70, 43);
+  border-right: 1px solid rgb(232, 70, 43);
+}
+
+.header-api-text {
+  width: 100%;
+  height: 2em;
+  margin-top: 0.5em;
+}
+
+.header-api-bar {
+  background-color: rgb(232, 70, 43);
+  height: 1.5em;
+}
+
+.header-logout {
+  flex-grow: 1;
+  flex-basis: 0;
+
+  align-self: center;
+  text-align: right;
+;
+}
+
+.file-upload {
+  grid-column: container-start / container-end;
+  grid-row: file-start / content-end;
+
+  margin: 1em;
+  padding: 2em;
+  padding-top: 30vmin;
+
+  text-align: center;
+
+  font-size: xx-large;
+  color: rgb(232, 70, 43);
+  font-weight: 500;
+  
+  border: 3px dashed rgb(232, 70, 43);
+  border-radius: 1em
+}
+
+.file-info {
+  grid-column: content-start / content-end;
+  grid-row: file-start / file-end;
+
+  padding: 0.5em;
+  border-bottom: 1px solid grey;
+}
+
+.file-info-background {
+  grid-column: container-start / container-end;
+  grid-row: file-start / file-end;
+  background-color: white;
+  border-bottom: 1px solid grey;
+}
+
+.comparison {
+  grid-column: content-start / content-end;
+  grid-row: content-start / content-end;
+
+  /* Flex */
+  display: flex;
+}
+
+.comparison-entry {
+  flex-grow: 1;
+  flex-basis: 0;
+
+  padding: 0.5em;
+}
