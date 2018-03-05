@@ -5,6 +5,6 @@ export const vars = Object.assign(
   defaultVars,
   {
     color_primary: '32, 45, 84',
-    color_secondary: '232, 70, 43',
+    color_primary_active: '232, 70, 43',
   },
 );

@@ -1,22 +1,24 @@
 /* CSV File parsing */
 
 import m from 'mithril';
+import Papa from 'papaparse';
 import { Toolbar, ToolbarTitle, Button } from 'polythene-mithril';
 
 const uploadFieldId = 'fileinput';
 let filename = '';
+
+export const users = {
+  list: [],
+};
 
 export function getCurrentFile() {
   return filename;
 }
 function closeFile() {
   filename = '';
+  users.list = [];
 }
 
-export const users = [
-  'adietmue',
-  'bconrad',
-];
 
 export const fileView = {
   view() {
@@ -35,17 +37,16 @@ function loadFile(event) {
     // Save file (the fancy splot statement removes path)
     filename = this.value.split(/(\\|\/)/g).pop();
 
-    // Create a FileReader Object
-    const reader = new FileReader();
-
-    // Add a processing function, which will be called when the
-    // reader has finished parsing the file
-    reader.onload = () => {
-      // importFromString(reader.result);
-    };
-
-    // Start the reader
-    reader.readAsText(event.target.files[0]);
+    Papa.parse(event.target.files[0], {
+      header: true,
+      complete(results) {
+        // The nethz is saved in the column LOGINNAME
+        users.list = results.data
+          .map(everything => everything.LOGINNAME)
+          .filter(Boolean); // Remove undefined etc.
+        m.redraw();
+      },
+    });
   }
 }
 
@@ -71,7 +72,7 @@ export const fileUploadView = {
           id: uploadFieldId,
           type: 'file',
           onchange: loadFile,
-          // ondrop() { console.log('drooped'); }, TODO: Make this work :)
+          // ondrop() { console.log('drooped'); }, // deTODO: Make this work :)
         },
         'Hidden file input.',
       ),

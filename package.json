@@ -16,9 +16,11 @@
   "author": "Alexander Dietmüller",
   "dependencies": {
     "mithril": "^1.1.6",
+    "papaparse": "^4.3.7",
     "polythene-core-css": "^1.0.0",
     "polythene-css": "^1.0.0",
-    "polythene-mithril": "^1.0.0"
+    "polythene-mithril": "^1.0.0",
+    "polythene-style": "^1.0.0"
   },
   "devDependencies": {
     "eslint": "^4.10.0",

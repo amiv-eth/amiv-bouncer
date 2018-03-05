@@ -7,7 +7,9 @@ import { Card, Button } from 'polythene-mithril';
 import { users as apiUsers } from './amivapi'; // List of objects
 import { users as csvUsers } from './csv'; // List of nethz of users
 
-function inCSV(apiUser) { return csvUsers.indexOf(apiUser.nethz) !== -1; }
+function inCSV(apiUser) {
+  return csvUsers.list.indexOf(apiUser.nethz) !== -1;
+}
 function inAPI(nethz) {
   return apiUsers.list.filter(user => user.nethz === nethz).length !== 0;
 }
@@ -58,6 +60,13 @@ const listView = {
 
 export default {
   view() {
+    if (apiUsers.list.length === 0) {
+      return m('.comparison-empty', 'No users in API.');
+    }
+    if (csvUsers.list.length === 0) {
+      return m('.comparison-empty', 'No users in file.');
+    }
+
     // All relevant combinations
     const ok = apiUsers.list.filter(user =>
       ((regularMember(user) && inCSV(user)) ||
@@ -69,7 +78,7 @@ export default {
       regularMember(user) && !inCSV(user));
     const change = apiUsers.list.filter(user =>
       specialMember(user) && inCSV(user));
-    const missing = csvUsers.filter(user => !inAPI(user));
+    const missing = csvUsers.list.filter(user => !inAPI(user));
 
     return [
       m(listView, {

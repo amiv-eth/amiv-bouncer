@@ -115,6 +115,7 @@ export const users = {
                                'user patching is required!');
           }
         });
+        tokenStorage.setValid();
         return response;
       })
       // 2. Start requests for all other pages
@@ -219,7 +220,7 @@ export const auth = {
   },
 
   /* Init download, if first request succeeds assume token is valid */
-  startGet() { users.get().then(() => { tokenStorage.setValid(); }); },
+  startGet() { users.get(); },
 };
 
 // If a token is already in storage, immediately get

@@ -51,11 +51,11 @@ const config = {
   },
 
   /*
-  // Replace Polythene THeme
+  // Replace Polythene Theme
   // https://github.com/ArthurClemens/polythene/blob/master/docs/theming/global-theme-file.md
   resolve: {
     alias: {
-      "polythene-theme": `${__dirname}/src/polythene-theme.js`,
+      'polythene-theme': `${__dirname}/src/polythene-theme.js`,
     },
   },
   */

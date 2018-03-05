@@ -150,19 +150,21 @@ body {
   grid-row: file-start / file-end;
 
   padding: 0.5em;
-  border-bottom: 1px solid grey;
+  border-bottom: 1px solid lightgrey;
 }
 
 .file-info-background {
   grid-column: container-start / container-end;
   grid-row: file-start / file-end;
   background-color: white;
-  border-bottom: 1px solid grey;
+  border-bottom: 1px solid lightgrey;
 }
 
 .comparison {
   grid-column: content-start / content-end;
   grid-row: content-start / content-end;
+
+  padding-top: 0.5em;
 
   /* Flex */
   display: flex;
@@ -173,4 +175,18 @@ body {
   flex-basis: 0;
 
   padding: 0.5em;
+}
+
+.comparison-empty {
+  width: 100%;
+
+  margin: 1em;
+  padding: 2em;
+  padding-top: 30vmin;
+
+  text-align: center;
+
+  font-size: xx-large;
+  color: lightgrey;
+  font-weight: 500;
 }
