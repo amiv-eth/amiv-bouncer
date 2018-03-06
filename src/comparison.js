@@ -112,8 +112,9 @@ export default {
         title: 'Missing',
         subtitle: 'Not found in API.',
         list: missing,
-        actionName: 'Import users',
-        action(nethzList) { apiUsers.sync(nethzList); },
+        actionName: 'No action possible',
+        // Currently not supported
+        // action(nethzList) { apiUsers.sync(nethzList); },
       }),
     ];
   },

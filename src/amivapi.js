@@ -154,21 +154,23 @@ export const users = {
     return response;
   },
 
-  /* Try to synchronize user with LDAP (triggered by login attempt) */
+  /* Try to synchronize user with LDAP (triggered by login attempt)
+  // -> This does not work! API only imports on successful login
   sync(nethzList) {
     if (this.busy) { throw new RequestError(); }
 
     apiMessage =
-      `Prompt API to synchronize ${this.list.length} users with LDAP...'`;
+      `Prompt API to synchronize ${nethzList.length} users with LDAP...'`;
     const promiseList = nethzList.map(nethz =>
       m.request({
         method: 'POST',
         url: `${apiUrl}/sessions`,
         data: { username: nethz, password: '' },
-      }).catch(() => { /* We expect failure, do nothing! */ }));
+      }).catch(() => { }));
     this.trackProgress(promiseList)
-      .then(() => { this.get(); /* Refresh users */ });
+      .then(() => { this.get();  });
   },
+  */
 
   /* Change membership of user to new value */
   setMembership(userList, membership) {
