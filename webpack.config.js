@@ -22,6 +22,12 @@ const config = {
     index: 'index.html',
   },
 
+  plugins: [
+    new webpack.EnvironmentPlugin({
+      API_URL: 'https://api.amiv.ethz.ch',
+    }),
+  ],
+
   module: {
     rules: [
       {
