@@ -113,7 +113,7 @@ export default {
         subtitle: 'Not found in API.',
         list: missing,
         actionName: 'Import users',
-        action(nethzList) { apiUsers.syncUser(nethzList); },
+        action(nethzList) { apiUsers.sync(nethzList); },
       }),
     ];
   },
