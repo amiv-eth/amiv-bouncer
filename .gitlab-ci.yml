@@ -1,0 +1,36 @@
+stages:
+  - build
+
+build_master:
+  stage: build
+
+  image: docker:latest
+  services:
+    - docker:dind
+
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+
+  script:
+    - docker build --pull -t "$CI_REGISTRY_IMAGE_BACKEND" ./Backend/
+    - docker push "$CI_REGISTRY_IMAGE_BACKEND"
+
+  only:
+    - master
+
+build:
+  stage: build
+
+  image: docker:latest
+  services:
+    - docker:dind
+
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+
+  script:
+    - docker build --pull -t "$CI_REGISTRY_IMAGE_BACKEND:$CI_COMMIT_REF_SLUG" ./Backend/
+    - docker push "$CI_REGISTRY_IMAGE_BACKEND:$CI_COMMIT_REF_SLUG"
+
+  except:
+    - master
