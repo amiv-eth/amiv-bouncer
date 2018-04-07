@@ -12,8 +12,8 @@ build_master:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
 
   script:
-    - docker build --pull -t "$CI_REGISTRY_IMAGE_BACKEND" ./Backend/
-    - docker push "$CI_REGISTRY_IMAGE_BACKEND"
+    - docker build --pull -t "$CI_REGISTRY_IMAGE" ./
+    - docker push "$CI_REGISTRY_IMAGE"
 
   only:
     - master
@@ -29,8 +29,8 @@ build:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
 
   script:
-    - docker build --pull -t "$CI_REGISTRY_IMAGE_BACKEND:$CI_COMMIT_REF_SLUG" ./Backend/
-    - docker push "$CI_REGISTRY_IMAGE_BACKEND:$CI_COMMIT_REF_SLUG"
+    - docker build --pull -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG" ./
+    - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
 
   except:
     - master
