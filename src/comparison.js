@@ -7,22 +7,6 @@ import { Card, Button } from 'polythene-mithril';
 import { users as apiUsers } from './amivapi'; // List of objects
 import { users as csvUsers } from './csv'; // List of nethz of users
 
-function inCSV(apiUser) {
-  return csvUsers.list.indexOf(apiUser.nethz) !== -1;
-}
-function inAPI(nethz) {
-  return apiUsers.list.filter(user => user.nethz === nethz).length !== 0;
-}
-function checkMembership(user, membership) {
-  return user.membership === membership;
-}
-function noMember(user) { return checkMembership(user, 'none'); }
-function regularMember(user) { return checkMembership(user, 'regular'); }
-function specialMember(user) {
-  return checkMembership(user, 'extraordinary') ||
-         checkMembership(user, 'honorary');
-}
-
 const listView = {
   view({
     attrs: {
@@ -67,18 +51,48 @@ export default {
       return m('.comparison-empty', 'No users in file.');
     }
 
-    // All relevant combinations
-    const ok = apiUsers.list.filter(user =>
-      ((regularMember(user) && inCSV(user)) ||
-       (!regularMember(user) && !inCSV(user))));
+    // Performance Optimizations: In previous versions, we used lists + filter
+    // This caused horrible performance
+    // We now use lots of maps to avoid unnecessary looping over lists
+    const ok = [];
+    const upgrade = [];
+    const downgrade = [];
+    const change = [];
+    const missing = [];
 
-    const upgrade = apiUsers.list.filter(user =>
-      noMember(user) && inCSV(user));
-    const downgrade = apiUsers.list.filter(user =>
-      regularMember(user) && !inCSV(user));
-    const change = apiUsers.list.filter(user =>
-      specialMember(user) && inCSV(user));
-    const missing = csvUsers.list.filter(user => !inAPI(user));
+    let userdata;
+    const csvUserMap = {};
+    csvUsers.list.forEach((nethz) => {
+      csvUserMap[nethz] = true;
+      userdata = apiUsers.userdata[nethz];
+      if (userdata) {
+        switch (userdata.membership) {
+          case 'regular':
+            ok.push(userdata); // ok.push(userdata);
+            break;
+          case 'none':
+            upgrade.push(userdata);
+            break;
+          default: // Extraordinary or Honoray
+            change.push(userdata);
+        }
+      } else {
+        missing.push(nethz);
+      }
+    });
+
+    apiUsers.list.forEach((user) => {
+      if (!csvUserMap[user.nethz]) {
+        if (user.membership === 'none') {
+          ok.push(user);
+        } else {
+          downgrade.push(user);
+        }
+      }
+    });
+
+    // Workaround to get list of missing members locally
+    // console.log(missing.join(' '));
 
     return [
       m(listView, {

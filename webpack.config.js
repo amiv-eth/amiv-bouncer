@@ -24,7 +24,7 @@ const config = {
 
   plugins: [
     new webpack.EnvironmentPlugin({
-      API_URL: 'https://api.amiv.ethz.ch',
+      API_URL: 'https://apiapi.amiv.ethz.ch',
     }),
   ],
 

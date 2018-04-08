@@ -21,7 +21,7 @@ config.plugins = [
     minRatio: 0.8,
   }),
   new webpack.EnvironmentPlugin({
-    API_URL: 'api.amiv.ethz.ch',
+    API_URL: 'https://api.amiv.ethz.ch',
   }),
 ];
 

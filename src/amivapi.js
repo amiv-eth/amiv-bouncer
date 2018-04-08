@@ -89,6 +89,7 @@ export const users = {
 
   get list() { return Object.values(this.userdata); },
 
+  // All users indexed by (unique nethz)
   userdata: {},
 
   /* Get ALL users in amivapi. Really, all of them. */
@@ -150,7 +151,7 @@ export const users = {
 
   /* Helper to process response: add all users to interal table */
   processResponse(response) {
-    response._items.forEach((user) => { this.userdata[user._id] = user; });
+    response._items.forEach((user) => { this.userdata[user.nethz] = user; });
     return response;
   },
 
@@ -177,15 +178,14 @@ export const users = {
     if (this.busy) { throw new RequestError(); }
 
     apiMessage = `Set membership of ${userList.length} to '${membership}...'`;
-    const promiseList = userList.map((user) => {
-      const id = user._id;
-      const etag = this.userdata[id]._etag;
+    const promiseList = userList.map(({ nethz }) => {
+      const { _id: id, _etag: etag } = this.userdata[nethz];
       return m.request({
         method: 'PATCH',
         url: `${apiUrl}/users/${id}`,
         headers: { Authorization: tokenStorage.token, 'If-Match': etag },
         data: { membership },
-      }).then((updates) => { this.userdata[id] = updates; });
+      }).then((updates) => { this.userdata[nethz] = updates; });
     });
     this.trackProgress(promiseList);
   },
