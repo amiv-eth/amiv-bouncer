@@ -39,6 +39,6 @@ deploy:
   stage: deploy
   image: amiveth/service-update-helper
   script:
-    - ./update.py
+    - /update.py
   only:
     - master
