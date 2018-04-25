@@ -5,7 +5,7 @@ import 'polythene-css/dist/polythene.css'; // Component CSS
 // Default Material Design styles including Roboto font
 import 'polythene-css/dist/polythene-typography.css';
 
-import { auth, apiView } from './amivapi';
+import { loggedIn, apiView, helloView } from './amivapi';
 import comparisonView from './comparison';
 import { getCurrentFile, fileUploadView, fileView } from './csv';
 import './style.css';
@@ -22,16 +22,16 @@ const logo = {
 
 const layout = {
   view() {
-    return m('.container', { class: !auth.loggedIn ? 'container-login' : '' }, [
+    return m('.container', [
       m('.header-background'),
       m('.header', [m(logo), m(apiView)]),
-      auth.loggedIn ? [
+      loggedIn() ? [
         getCurrentFile() ? [
           m('.file-info-background'),
           m(fileView),
           m('.comparison', m(comparisonView)),
         ] : m(fileUploadView),
-      ] : [],
+      ] : m(helloView),
     ]);
   },
 };

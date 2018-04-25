@@ -1,29 +1,41 @@
 /* Session and Users from AMIVAPI */
 
+// Big Todo: Simplify the user requesting, its horribly convoluted!
+
 import m from 'mithril';
-import { Button, TextField } from 'polythene-mithril';
+import ls from 'local-storage';
+import { Button } from 'polythene-mithril';
+import { apiUrl, OAuthId } from 'config';
 
-// URL be set from environment by webpack during build
-const apiUrl = process.env.API_URL;
+// Persist token and state for oauth-request
+let session = ls.get('session') || {};
+ls.on('session', (newSession) => { session = newSession; m.redraw(); });
 
-const tokenStorage = {
-  token: window.localStorage.getItem('bouncer-token'),
-  isValid: window.localStorage.getItem('bouncer-valid'),
+// Redirect to OAuth landing page
+function login() {
+  // Generate random state and overwrite currently stored session data
+  const newSession = {
+    state: Math.random().toString(),
+  };
+  ls.set('session', newSession);
 
-  setToken(token) {
-    this.token = token;
-    window.localStorage.setItem('bouncer-token', token);
-  },
-  setValid() {
-    this.isValid = true;
-    window.localStorage.setItem('bouncer-valid', 'valid');
-  },
-  setInvalid() {
-    this.setToken(''); // Additionally reset token
-    this.isValid = false;
-    window.localStorage.setItem('bouncer-valid', '');
-  },
-};
+  const query = m.buildQueryString({
+    response_type: 'token',
+    client_id: OAuthId,
+    redirect_uri: window.location.origin,
+    state: newSession.state,
+  });
+
+  // Redirect
+  window.location.href = `${apiUrl}/oauth?${query}`;
+}
+
+function logout() {
+  session = {};
+  ls.set('session', session);
+  m.redraw();
+}
+
 
 let apiMessage = '';
 
@@ -43,7 +55,7 @@ function ApiError(message) {
 /* Generic Error Handler */
 function handleApiError({ _error: err }) {
   // Log out and show error
-  tokenStorage.setInvalid();
+  logout();
   const formattedCode = err.code ? ` (${err.code})` : '';
   apiMessage = `Error${formattedCode}: ${err.message}`;
 }
@@ -102,7 +114,7 @@ export const users = {
     return m.request({
       method: 'GET',
       url: `${apiUrl}/users?${proj}`,
-      headers: { Authorization: tokenStorage.token },
+      headers: { Authorization: session.token },
     })
       // 1. Users exist and token grants permissions
       .then((response) => {
@@ -117,7 +129,6 @@ export const users = {
                                'user patching is required!');
           }
         });
-        tokenStorage.setValid();
         return response;
       })
       // 2. Start requests for all other pages
@@ -145,7 +156,7 @@ export const users = {
     return m.request({
       method: 'GET',
       url: `${apiUrl}/users?${proj}&page=${page}`,
-      headers: { Authorization: tokenStorage.token },
+      headers: { Authorization: session.token },
     }).then(r => this.processResponse(r));
   },
 
@@ -183,7 +194,7 @@ export const users = {
       return m.request({
         method: 'PATCH',
         url: `${apiUrl}/users/${id}`,
-        headers: { Authorization: tokenStorage.token, 'If-Match': etag },
+        headers: { Authorization: session.token, 'If-Match': etag },
         data: { membership },
       }).then((updates) => { this.userdata[nethz] = updates; });
     });
@@ -191,47 +202,54 @@ export const users = {
   },
 };
 
-// Auth Interface
-export const auth = {
-  username: '',
-  password: '',
 
-  get loggedIn() { return tokenStorage.isValid; },
+// Check Token in URL to determine login status
 
-  get canLogin() { return this.password !== ''; },
-
-  /* Login. If only password provided, try to use it as token */
-  login() {
-    apiMessage = ''; // Reset errors
-    tokenStorage.setInvalid();
-    if (this.username !== '') {
-      m.request({
-        method: 'POST',
-        url: `${apiUrl}/sessions`,
-        data: { username: this.username, password: this.password },
-      }).then(({ token: t }) => { tokenStorage.setToken(t); this.startGet(); })
-        .catch(handleApiError);
+function validateToken() {
+  const query = m.buildQueryString({
+    where: JSON.stringify({ token: session.token }),
+  });
+  m.request({
+    method: 'GET',
+    headers: { Authorization: session.token },
+    url: `${apiUrl}/sessions?${query}`,
+  }).then((data) => {
+    if (data._items.length !== 0) {
+      // Validate token
+      session.validated = true;
+      ls.set('session', session);
     } else {
-      tokenStorage.setToken(this.password);
-      this.startGet();
+      // Token not valid anymore
+      logout();
     }
-  },
+  });
+}
 
-  logout() {
-    tokenStorage.setInvalid();
-    apiMessage = 'Goodbye!';
-  },
 
-  /* Init download, if first request succeeds assume token is valid */
-  startGet() { users.get(); },
-};
+// Check if user was sent back (token with correct state in URL)
+function checkToken() {
+  const query = m.parseQueryString(window.location.search);
 
-// If a token is already in storage, immediately get
-if (auth.loggedIn) { users.get(); }
+  if (query.state && query.access_token && (query.state === session.state)) {
+    // Safe token
+    session.token = query.access_token;
+    session.validated = false;
+    ls.set('session', session);
+
+    validateToken();
+  }
+}
+
+checkToken();
+
+export function loggedIn() {
+  return session.token && session.validated;
+}
 
 
 // Export API View
 const statusView = {
+  oninit() { users.get(); },
   view() {
     const progress = Math.round(users.progress * 100);
     return m('.header-api-status', [
@@ -244,40 +262,13 @@ const statusView = {
   },
 };
 
-const loginView = {
-  view() {
-    return m('.header-api-login', [
-      m(TextField, {
-        label: 'nethz',
-        floatingLabel: true,
-        tone: 'dark',
-        value: auth.username,
-        onChange: (newState) => { auth.username = newState.value; },
-      }),
-      m(TextField, {
-        label: 'password or token',
-        type: 'password',
-        floatingLabel: true,
-        tone: 'dark',
-        value: auth.password,
-        onChange: (newState) => { auth.password = newState.value; },
-      }),
-      // m('div', apiMessage), // TODO: Report Errors
-      m(Button, {
-        label: 'Login',
-        tone: 'dark',
-        events: { onclick() { auth.login(); } },
-      }),
-    ]);
-  },
-};
 
 const logoutView = {
   view() {
     return m('.header-api-logout', m(Button, {
       label: 'Logout',
       tone: 'dark',
-      events: { onclick() { auth.logout(); } },
+      events: { onclick: logout },
     }));
   },
 };
@@ -285,10 +276,24 @@ const logoutView = {
 // Export API View
 export const apiView = {
   view() {
-    return auth.loggedIn ? [
+    return loggedIn() ? [
       m(statusView), m(logoutView),
-    ] : [
-      m(loginView),
-    ];
+    ] : [];
+  },
+};
+
+export const helloView = {
+  view() {
+    let message;
+    if (!session.token) {
+      message = 'Welcome to the AMIV Bouncer, who takes a look at the ' +
+                'list of members and decides who is in and who is not. ' +
+                'Please click anywhere to log in.';
+    } else if (!session.validated) {
+      message = 'Welcome back, please wait a moment while your permissions ' +
+                'are verified.';
+    }
+
+    return m('.file-upload', { onclick: login }, message);
   },
 };

@@ -20,9 +20,9 @@ config.plugins = [
     threshold: 10240,
     minRatio: 0.8,
   }),
-  new webpack.EnvironmentPlugin({
-    API_URL: 'https://api.amiv.ethz.ch',
-  }),
 ];
+
+// Replace development with production config
+config.resolve.alias.config = `${__dirname}/config.prod.js`;
 
 module.exports = config;
