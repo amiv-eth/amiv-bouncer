@@ -233,7 +233,7 @@ const logoutView = {
     return m('.header-api-logout', m(Button, {
       label: 'Logout',
       tone: 'dark',
-      events: { onclick() { logout('You have been logged out. Goodbye!'); } },
+      events: { onclick() { logout('Goodbye!'); } },
     }));
   },
 };

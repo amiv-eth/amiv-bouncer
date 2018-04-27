@@ -11,6 +11,7 @@ import { getCurrentFile, fileUploadView, fileView } from './csv';
 import './style.css';
 import logoUrl from './logo.svg';
 
+
 const logo = {
   view() {
     return m(
@@ -20,36 +21,29 @@ const logo = {
   },
 };
 
-const greeting = 'Welcome to the AMIV Bouncer, who takes a look at the ' +
-                'list of members and decides who is in and who is not.';
-
-
-const LandingPage = {
-  view() {
-    const message = getLogoutMessage() || greeting;
-    return [
-      message,
-      m('a', { onclick: login }, 'Login'),
-    ];
-  },
-};
-
 
 const layout = {
   view() {
-    if (getToken()) {
-      return m('.container', [
-        m('.header-background'),
-        m('.header', [m(logo), m(apiView)]), [
+    const token = getToken();
+    const message = getLogoutMessage();
+
+    // If no token nor logout message, redirect to oauth login page
+    const loginRequired = !token && !message;
+    if (loginRequired) { login(); }
+
+    return m('.container', [
+      m('.header-background'),
+      m('.header', [m(logo), token ? m(apiView) : []]),
+      !loginRequired ? [
+        !message ? [
           getCurrentFile() ? [
             m('.file-info-background'),
             m(fileView),
             m('.comparison', m(comparisonView)),
           ] : m(fileUploadView),
-        ],
-      ]);
-    }
-    return m(LandingPage);
+        ] : m('.error', message),
+      ] : [m('.error', 'Redirecting to login page...')],
+    ]);
   },
 };
 

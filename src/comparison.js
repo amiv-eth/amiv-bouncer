@@ -45,10 +45,10 @@ const listView = {
 export default {
   view() {
     if (apiUsers.list.length === 0) {
-      return m('.comparison-empty', 'No users in API.');
+      return m('.error', 'No users in API.');
     }
     if (csvUsers.list.length === 0) {
-      return m('.comparison-empty', 'No users in file.');
+      return m('.error', 'No users in file.');
     }
 
     // Performance Optimizations: In previous versions, we used lists + filter

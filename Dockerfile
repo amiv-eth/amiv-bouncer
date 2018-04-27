@@ -1,19 +1,31 @@
+# First stage: Build project
+FROM node as build
+
+# Copy files and install dependencies
+COPY ./ /
+RUN npm install
+
+# Build project
+RUN npm run build
+
+
+# Second stage: Server to deliver files
 FROM node:alpine
 
 # Port 8080 can be used as non root
 EXPOSE 8080
-
-# URL can be set via env var for build
-ENV API_URL='api.amiv.ethz.ch'
 
 # Create user with home directory and no password
 RUN adduser -Dh /bouncer bouncer
 USER bouncer
 WORKDIR /bouncer
 
-# Copy files and install dependencies
-COPY ./ /bouncer/
-RUN npm install
+# Install http server
+RUN npm install --no-save http-server
 
-# Build on demand (to consider container env vars) and run http server
-CMD ["npm", "run", "server"]
+# Copy files from first stage
+COPY --from=build /index.html /bouncer/
+COPY --from=build /dist /bouncer/dist
+
+# Run server (-g will automatically serve the gzipped files if possible)
+CMD ["/bouncer/node_modules/.bin/http-server", "-g", "/bouncer"]

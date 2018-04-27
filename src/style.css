@@ -37,20 +37,6 @@ body {
   grid-row-gap: 0px;
 }
 
-.container-login {
-  /* Modify grids */
-  grid-template-columns: [container-start] 20% [content-start] auto
-                         [content-end] 20% [container-end];
-  grid-template-rows: 1fr [header-start] auto [header-end file-start] auto
-                      [file-end content-start] 1fr [content-end];
-
-}
-
-.login-container {
-  grid-column: content-start / content-end;
-  grid-row: header-start / content-end;
-}
-
 .header {
   grid-column: content-start / content-end;
   grid-row: header-start / header-end;
@@ -111,14 +97,6 @@ body {
   height: 1.5em;
 }
 
-.header-api-login {
-  width: 25em;
-  padding: 2em;
-
-  align-self: center;
-  text-align: right;
-}
-
 .header-api-logout {
   flex-grow: 1;
   flex-basis: 0;
@@ -140,7 +118,7 @@ body {
   font-size: xx-large;
   color: rgb(232, 70, 43);
   font-weight: 500;
-  
+
   border: 3px dashed rgb(232, 70, 43);
   border-radius: 1em
 }
@@ -177,16 +155,19 @@ body {
   padding: 0.5em;
 }
 
-.comparison-empty {
-  width: 100%;
+.error {
+  grid-column: content-start / content-end;
+  grid-row: content-start / content-end;
 
-  margin: 1em;
+  width: 100%;
+  box-sizing: border-box;
+
   padding: 2em;
   padding-top: 30vmin;
 
   text-align: center;
 
   font-size: xx-large;
-  color: lightgrey;
+  color: grey;
   font-weight: 500;
 }
