@@ -1,19 +1,25 @@
 /* Session and Users from AMIVAPI */
 
-// Big Todo: Simplify the user requesting, its horribly convoluted!
-
 import m from 'mithril';
 import ls from 'local-storage';
 import { Button } from 'polythene-mithril';
 import { apiUrl, OAuthId } from 'config';
 
+
+// AMIVAPI OAUTH
+// =============
+
 // Persist token and state for oauth-request
 let session = ls.get('session') || {};
 ls.on('session', (newSession) => { session = newSession; m.redraw(); });
 
+export function getToken() {
+  return session.token;
+}
+
 // Redirect to OAuth landing page
-function login() {
-  // Generate random state and overwrite currently stored session data
+export function login() {
+  // Generate random state and reset currently stored session data
   const newSession = {
     state: Math.random().toString(),
   };
@@ -26,16 +32,30 @@ function login() {
     state: newSession.state,
   });
 
-  // Redirect
+  // Redirect to AMIV api oauth page
   window.location.href = `${apiUrl}/oauth?${query}`;
 }
 
-function logout() {
+let logoutMessage = '';
+export function getLogoutMessage() { return logoutMessage; }
+
+export function logout(message = '') {
   session = {};
   ls.set('session', session);
-  m.redraw();
+  logoutMessage = message;
 }
 
+
+// Extract token from query string automatically if state matches
+const params = m.parseQueryString(window.location.search);
+if (params.state && params.access_token && (params.state === session.state)) {
+  session.token = params.access_token;
+  ls.set('session', session);
+}
+
+
+// AMIVAPI REQUESTS
+// ================
 
 let apiMessage = '';
 
@@ -45,20 +65,6 @@ function RequestError() {
   this.message = 'Cannot send new requests, other requests are in progress!';
 }
 
-/* Error in Eve format for easier parsing */
-function ApiError(message) {
-  this._error = {
-    code: '',
-    message,
-  };
-}
-/* Generic Error Handler */
-function handleApiError({ _error: err }) {
-  // Log out and show error
-  logout();
-  const formattedCode = err.code ? ` (${err.code})` : '';
-  apiMessage = `Error${formattedCode}: ${err.message}`;
-}
 
 /* Projection to only include required fields for users. */
 const proj = m.buildQueryString({
@@ -77,24 +83,23 @@ export const users = {
       : 0;
   },
 
-  trackProgress(promiseList) {
+  async trackProgress(promiseList) {
     // Init progress
     this.totalRequests = promiseList.length;
     this.completedRequests = 0;
 
-    // Update progress with each resolve
+    // Update progress with each resolved promise
     promiseList.forEach((promise) => {
       promise.then(() => { this.completedRequests += 1; });
     });
 
-    // Return Promise that resolves if all resolve
-    return Promise.all(promiseList)
-      .then(() => {
-        apiMessage = `${this.list.length} users synchronized with API.`;
-      })
-      .catch(() => {
-        apiMessage = 'Some requests were unsuccessful, please reload page!';
-      });
+    // Wait for all other promises to resolve
+    try {
+      await Promise.all(promiseList);
+      apiMessage = `${this.list.length} users synchronized with API.`;
+    } catch (err) {
+      apiMessage = 'Some requests were unsuccessful, please reload page!';
+    }
   },
 
   get busy() { return this.totalRequests !== this.completedRequests; },
@@ -105,62 +110,64 @@ export const users = {
   userdata: {},
 
   /* Get ALL users in amivapi. Really, all of them. */
-  get() {
+  async get() {
     if (this.busy) { throw new RequestError(); }
     // Reset Data
     this.userdata = {};
 
-    // Use first request to discover number of pages and check permissions
-    return m.request({
+    // 1. Use first request to discover number of pages and check permissions
+    const initialRequest = m.request({
       method: 'GET',
       url: `${apiUrl}/users?${proj}`,
       headers: { Authorization: session.token },
-    })
-      // 1. Users exist and token grants permissions
-      .then((response) => {
-        if (response._items.length === 0) {
-          throw new ApiError('No users in API!');
-        }
-        // Check if patch possible. Randomly, we could get own user back
-        // so check patch for everyone in first response to be sure
-        response._items.forEach(({ _links: { self: { methods } } }) => {
-          if (methods.indexOf('PATCH') === -1) {
-            throw new ApiError('Insufficient permissions, ' +
-                               'user patching is required!');
-          }
-        });
-        return response;
-      })
-      // 2. Start requests for all other pages
-      .then((response) => {
-        const userCount = response._meta.total;
-        const pageSize = response._meta.max_results;
-        const pages = Math.ceil(userCount / pageSize);
+    });
+    const response = await initialRequest;
 
-        apiMessage = 'Requesting all users from API...';
-        const promiseList = [];
-        for (let p = 2; p <= pages; p += 1) {
-          promiseList.push(this.getPage(p));
-        }
-        this.trackProgress(promiseList);
-        return response;
-      })
-      // 3. Process users in first response
-      .then(r => this.processResponse(r))
-      // 5. Catch all API errors
-      .catch(handleApiError);
+    if (response._items.length === 0) {
+      apiMessage = 'No users in API!';
+      return;
+    }
+    // Check if patch possible. Randomly, we could get own user back
+    // so check patch for everyone in first response to be sure
+    function cannotPatch(user) {
+      const { _links: { self: { methods } } } = user;
+      return methods.indexOf('PATCH') === -1;
+    }
+    if (response._items.some(cannotPatch)) {
+      logout('You have been logged out because your permissions are ' +
+               'insufficient. You must be able to modify all users to ' +
+               'use this tool.');
+    }
+
+    // 2. Process users in first response
+    this.processResponse(response);
+
+    // 3. Start requests for all other pages
+    const { total: userCount, max_results: pageSize } = response._meta;
+    const pages = Math.ceil(userCount / pageSize);
+
+    apiMessage = 'Requesting all users from API...';
+    const promiseList = [initialRequest];
+    for (let p = 2; p <= pages; p += 1) {
+      promiseList.push(this.getPage(p));
+    }
+    await this.trackProgress(promiseList);
   },
 
   /* Get users on a specific page */
-  getPage(page) {
-    return m.request({
+  async getPage(page) {
+    const data = await m.request({
       method: 'GET',
       url: `${apiUrl}/users?${proj}&page=${page}`,
       headers: { Authorization: session.token },
-    }).then(r => this.processResponse(r));
+    });
+
+    this.processResponse(data);
+
+    return data;
   },
 
-  /* Helper to process response: add all users to interal table */
+  /* Helper to process response: add all users to internal table */
   processResponse(response) {
     response._items.forEach((user) => { this.userdata[user.nethz] = user; });
     return response;
@@ -185,10 +192,11 @@ export const users = {
   */
 
   /* Change membership of user to new value */
-  setMembership(userList, membership) {
+  async setMembership(userList, membership) {
     if (this.busy) { throw new RequestError(); }
 
-    apiMessage = `Set membership of ${userList.length} to '${membership}...'`;
+    apiMessage = `Setting membership of ${userList.length} ` +
+                 `users to '${membership}...'`;
     const promiseList = userList.map(({ nethz }) => {
       const { _id: id, _etag: etag } = this.userdata[nethz];
       return m.request({
@@ -198,53 +206,10 @@ export const users = {
         data: { membership },
       }).then((updates) => { this.userdata[nethz] = updates; });
     });
-    this.trackProgress(promiseList);
+
+    await this.trackProgress(promiseList);
   },
 };
-
-
-// Check Token in URL to determine login status
-
-function validateToken() {
-  const query = m.buildQueryString({
-    where: JSON.stringify({ token: session.token }),
-  });
-  m.request({
-    method: 'GET',
-    headers: { Authorization: session.token },
-    url: `${apiUrl}/sessions?${query}`,
-  }).then((data) => {
-    if (data._items.length !== 0) {
-      // Validate token
-      session.validated = true;
-      ls.set('session', session);
-    } else {
-      // Token not valid anymore
-      logout();
-    }
-  });
-}
-
-
-// Check if user was sent back (token with correct state in URL)
-function checkToken() {
-  const query = m.parseQueryString(window.location.search);
-
-  if (query.state && query.access_token && (query.state === session.state)) {
-    // Safe token
-    session.token = query.access_token;
-    session.validated = false;
-    ls.set('session', session);
-
-    validateToken();
-  }
-}
-
-checkToken();
-
-export function loggedIn() {
-  return session.token && session.validated;
-}
 
 
 // Export API View
@@ -268,7 +233,7 @@ const logoutView = {
     return m('.header-api-logout', m(Button, {
       label: 'Logout',
       tone: 'dark',
-      events: { onclick: logout },
+      events: { onclick() { logout('You have been logged out. Goodbye!'); } },
     }));
   },
 };
@@ -276,24 +241,8 @@ const logoutView = {
 // Export API View
 export const apiView = {
   view() {
-    return loggedIn() ? [
+    return [
       m(statusView), m(logoutView),
-    ] : [];
-  },
-};
-
-export const helloView = {
-  view() {
-    let message;
-    if (!session.token) {
-      message = 'Welcome to the AMIV Bouncer, who takes a look at the ' +
-                'list of members and decides who is in and who is not. ' +
-                'Please click anywhere to log in.';
-    } else if (!session.validated) {
-      message = 'Welcome back, please wait a moment while your permissions ' +
-                'are verified.';
-    }
-
-    return m('.file-upload', { onclick: login }, message);
+    ];
   },
 };

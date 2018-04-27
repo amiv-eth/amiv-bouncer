@@ -1,11 +1,9 @@
-const webpack = require('webpack');
-
 const publicPath = '/dist/';
 
 const config = {
   context: `${__dirname}/src`, // `__dirname` is root of project
 
-  entry: './index.js',
+  entry: ['babel-polyfill', './index.js'],
 
   output: {
     path: `${__dirname}/dist`, // `dist` is the destination

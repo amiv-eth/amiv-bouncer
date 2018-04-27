@@ -5,7 +5,7 @@ import 'polythene-css/dist/polythene.css'; // Component CSS
 // Default Material Design styles including Roboto font
 import 'polythene-css/dist/polythene-typography.css';
 
-import { loggedIn, apiView, helloView } from './amivapi';
+import { login, getToken, getLogoutMessage, apiView } from './amivapi';
 import comparisonView from './comparison';
 import { getCurrentFile, fileUploadView, fileView } from './csv';
 import './style.css';
@@ -20,19 +20,36 @@ const logo = {
   },
 };
 
+const greeting = 'Welcome to the AMIV Bouncer, who takes a look at the ' +
+                'list of members and decides who is in and who is not.';
+
+
+const LandingPage = {
+  view() {
+    const message = getLogoutMessage() || greeting;
+    return [
+      message,
+      m('a', { onclick: login }, 'Login'),
+    ];
+  },
+};
+
+
 const layout = {
   view() {
-    return m('.container', [
-      m('.header-background'),
-      m('.header', [m(logo), m(apiView)]),
-      loggedIn() ? [
-        getCurrentFile() ? [
-          m('.file-info-background'),
-          m(fileView),
-          m('.comparison', m(comparisonView)),
-        ] : m(fileUploadView),
-      ] : m(helloView),
-    ]);
+    if (getToken()) {
+      return m('.container', [
+        m('.header-background'),
+        m('.header', [m(logo), m(apiView)]), [
+          getCurrentFile() ? [
+            m('.file-info-background'),
+            m(fileView),
+            m('.comparison', m(comparisonView)),
+          ] : m(fileUploadView),
+        ],
+      ]);
+    }
+    return m(LandingPage);
   },
 };
 
