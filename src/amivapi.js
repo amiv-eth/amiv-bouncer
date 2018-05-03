@@ -121,7 +121,20 @@ export const users = {
       url: `${apiUrl}/users?${proj}`,
       headers: { Authorization: session.token },
     });
-    const response = await initialRequest;
+
+    let response;
+    try {
+      response = await initialRequest;
+    } catch ({ _error: { code }}) {
+      if (code == 401) {
+        logout('You have been logged out because your session is invalid or ' +
+               'has expired.');
+      } else {
+        logout('There is an error with the AMIV API, please try again and ' +
+               'contact AMIV IT if the problem persists.');
+      }
+      return;
+    }
 
     if (response._items.length === 0) {
       apiMessage = 'No users in API!';
@@ -137,6 +150,7 @@ export const users = {
       logout('You have been logged out because your permissions are ' +
                'insufficient. You must be able to modify all users to ' +
                'use this tool.');
+      return;
     }
 
     // 2. Process users in first response
