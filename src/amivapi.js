@@ -125,8 +125,8 @@ export const users = {
     let response;
     try {
       response = await initialRequest;
-    } catch ({ _error: { code }}) {
-      if (code == 401) {
+    } catch ({ _error: { code } }) {
+      if (code === 401) {
         logout('You have been logged out because your session is invalid or ' +
                'has expired.');
       } else {
