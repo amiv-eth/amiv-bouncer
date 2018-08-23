@@ -39,7 +39,22 @@ export function login() {
 let logoutMessage = '';
 export function getLogoutMessage() { return logoutMessage; }
 
-export function logout(message = '') {
+export async function logout(message = '') {
+  const response = await m.request({
+    method: 'GET',
+    url: `${apiUrl}/sessions/${session.token}`,
+    headers: {
+      Authorization: session.token,
+    },
+  });
+  await m.request({
+    method: 'DELETE',
+    url: `${apiUrl}/sessions/${response._id}`,
+    headers: {
+      Authorization: session.token,
+      'If-Match': response._etag,
+    },
+  });
   session = {};
   ls.set('session', session);
   logoutMessage = message;
