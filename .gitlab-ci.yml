@@ -13,25 +13,28 @@ eslint:
 
 build_master:
   stage: build
-  image: docker:latest
-  services:
-    - docker:dind
+  image: docker:stable
+  variables:
+    DOCKER_DRIVER: overlay2
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
-    - docker build --pull -t "$CI_REGISTRY_IMAGE" ./
-    - docker push "$CI_REGISTRY_IMAGE"
+    - docker build --cache-from "$CI_REGISTRY_IMAGE:latest" --pull -t "$CI_REGISTRY_IMAGE:latest" .
+    - docker push "$CI_REGISTRY_IMAGE:latest"
   only:
     - master
+  environment:
+    name: production
+    url: https://bouncer.amiv.ethz.ch
 
 # On branches except master: verify that build works, do not push to registry
 build:
   stage: build
-  image: docker:latest
-  services:
-    - docker:dind
+  image: docker:stable
+  variables:
+    DOCKER_DRIVER: overlay2
   script:
-    - docker build --pull ./
+    - docker build --cache-from "$CI_REGISTRY_IMAGE:latest" --pull .
   except:
     - master
 

@@ -3,7 +3,7 @@ const publicPath = '/dist/';
 const config = {
   context: `${__dirname}/src`, // `__dirname` is root of project
 
-  entry: ['babel-polyfill', './index.js'],
+  entry: './index.js',
 
   output: {
     path: `${__dirname}/dist`, // `dist` is the destination
@@ -25,10 +25,16 @@ const config = {
       {
         test: /\.js$/, // Check for all js files
         exclude: /node_modules/,
-        use: [{
-          loader: 'babel-loader',
-          options: { presets: ['env'] },
-        }],
+        use: [
+          {
+            loader: 'babel-loader',
+            options: {
+              presets: [
+                ['@babel/preset-env', { useBuiltIns: 'usage', corejs: 3, targets: 'last 2 years' }],
+              ],
+            },
+          },
+        ],
       },
       {
         test: /\.(png|jpe?g|gif|svg)$/,

@@ -79,8 +79,7 @@ export const users = {
   totalRequests: 0,
   completedRequests: 0,
   get progress() {
-    return this.totalRequests ? (this.completedRequests / this.totalRequests)
-      : 0;
+    return this.totalRequests ? (this.completedRequests / this.totalRequests) : 0;
   },
 
   async trackProgress(promiseList) {

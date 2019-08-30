@@ -5,7 +5,9 @@ import 'polythene-css/dist/polythene.css'; // Component CSS
 // Default Material Design styles including Roboto font
 import 'polythene-css/dist/polythene-typography.css';
 
-import { login, getToken, getLogoutMessage, apiView } from './amivapi';
+import {
+  login, getToken, getLogoutMessage, apiView,
+} from './amivapi';
 import comparisonView from './comparison';
 import { getCurrentFile, fileUploadView, fileView } from './csv';
 import './style.css';

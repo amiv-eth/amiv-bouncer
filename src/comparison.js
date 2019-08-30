@@ -68,7 +68,7 @@ export default {
       if (userdata) {
         switch (userdata.membership) {
           case 'regular':
-            ok.push(userdata); // ok.push(userdata);
+            ok.push(userdata);
             break;
           case 'none':
             upgrade.push(userdata);
@@ -85,14 +85,16 @@ export default {
       if (!csvUserMap[user.nethz]) {
         if (user.membership === 'none') {
           ok.push(user);
-        } else {
+        } else if (user.membership === 'regular') {
+          // Only downgrade regular users not on the list anymore.
           downgrade.push(user);
         }
       }
     });
 
     // Workaround to get list of missing members locally
-    // console.log(missing.join(' '));
+    // eslint-disable-next-line no-console
+    console.log(missing.join(' '));
 
     return [
       m(listView, {

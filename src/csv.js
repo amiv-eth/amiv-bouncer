@@ -42,7 +42,7 @@ function loadFile(event) {
       complete(results) {
         // The nethz is saved in the column LOGINNAME
         users.list = results.data
-          .map(everything => everything.LOGINNAME)
+          .map((everything) => everything.LOGINNAME)
           .filter(Boolean); // Remove undefined etc.
         m.redraw();
       },
