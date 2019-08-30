@@ -1,4 +1,3 @@
-const webpack = require('webpack');
 const CompressionPlugin = require('compression-webpack-plugin');
 
 // Start with dev config
@@ -11,8 +10,6 @@ config.devtool = '';
 
 // Add optimization plugins
 config.plugins = [
-  new webpack.optimize.UglifyJsPlugin(),
-  new webpack.optimize.AggressiveMergingPlugin(),
   new CompressionPlugin({
     algorithm: 'gzip',
     test: /\.js$|\.css$|\.html$/,

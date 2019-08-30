@@ -73,6 +73,11 @@ const config = {
   */
 
   devtool: 'eval-source-map', // Default development sourcemap
+
+  optimization: {
+    usedExports: true,
+    sideEffects: false,
+  },
 };
 
 module.exports = config;
