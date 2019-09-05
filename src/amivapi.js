@@ -51,6 +51,8 @@ const params = m.parseQueryString(window.location.search);
 if (params.state && params.access_token && (params.state === session.state)) {
   session.token = params.access_token;
   ls.set('session', session);
+  // Token is valid and stored in the session, so we can remove it from the URL
+  window.history.replaceState({}, document.title, '/');
 }
 
 
